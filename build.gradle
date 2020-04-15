@@ -1,0 +1,129 @@
+buildscript {
+  if (!project.hasProperty("sonatypeUsername") || !project.hasProperty("sonatypePassword")) {
+    ext.sonatypeUsername = System.getenv("SONATYPE_USERNAME")
+    ext.sonatypePassword = System.getenv("SONATYPE_PASSWORD")
+  }
+}
+
+plugins {
+  id "java-library"
+
+  // for publishing the artifact to maven central
+  id "maven-publish"
+
+  // for signing the artifact when publishing to maven central
+  id "signing"
+
+  // https://plugins.gradle.org/plugin/com.github.sherter.google-java-format
+  id "com.github.sherter.google-java-format" version "0.8"
+
+  // https://plugins.gradle.org/plugin/net.ltgt.errorprone
+  id 'net.ltgt.errorprone' version "0.6.1"
+
+  // https://plugins.gradle.org/plugin/com.commercehub.gradle.plugin.avro
+  id 'com.commercehub.gradle.plugin.avro' version '0.9.1'
+}
+
+repositories {
+  mavenCentral()
+}
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+dependencies {
+  errorprone "com.google.errorprone:error_prone_core:2.3.4"
+
+  // required for Java 8 support
+  errorproneJavac "com.google.errorprone:javac:9+181-r4173-1"
+
+  implementation "org.apache.kafka:kafka-streams:2.5.0"
+
+  // required for registryless Avro
+  implementation "org.apache.avro:avro:1.8.2"
+  implementation 'joda-time:joda-time:2.10.1'
+
+  testImplementation('org.junit.jupiter:junit-jupiter:5.6.2')
+}
+
+tasks.withType(JavaCompile).configureEach { javaCompile ->
+  javaCompile.dependsOn "googleJavaFormat"
+  options.encoding = 'UTF-8'
+  options.errorprone {
+    disableWarningsInGeneratedCode = true
+    excludedPaths = ".*/build/generated/.*"
+  }
+}
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    events "passed", "skipped", "failed"
+  }
+}
+
+task sourcesJar(type: Jar) {
+  from sourceSets.main.allJava
+  archiveClassifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+  from javadoc
+  archiveClassifier = 'javadoc'
+}
+
+publishing {
+  publications {
+    mavenJava(MavenPublication) {
+      artifactId = 'kafka-registryless-avro-serdes'
+      groupId 'com.mitchseymour'
+      version '0.1.0'
+      from components.java
+      artifact sourcesJar
+      artifact javadocJar
+      pom {
+        name = 'Kafka Registryless Avro Serdes'
+        description = 'A Serdes for serializing / deserializing Avro records without a schema registry'
+        url = 'https://github.com/mitch-seymour/kafka-registryless-avro-serdes'
+        licenses {
+          license {
+            name = 'The Apache License, Version 2.0'
+            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+          }
+        }
+        developers {
+          developer {
+            id = 'mitch-seymour'
+            name = 'Mitch Seymour'
+            email = 'mitchseymour@gmail.com'
+          }
+        }
+        scm {
+            connection = 'scm:git:git://github.com/mitch-seymour/kafka-registryless-avro-serdes.git'
+            developerConnection = 'scm:git:ssh://git@github.com:mitch-seymour/kafka-registryless-avro-serdes.git'
+            url = 'https://github.com/mitch-seymour/kafka-registryless-avro-serdes'
+        }
+      }
+    }
+  }
+  repositories {
+    maven {
+      url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+      credentials {
+          username sonatypeUsername
+          password sonatypePassword
+      }
+    }
+  }
+}
+
+signing {
+  sign publishing.publications.mavenJava
+}
+
+
+javadoc {
+  if(JavaVersion.current().isJava9Compatible()) {
+    options.addBooleanOption('html5', true)
+  }
+}
