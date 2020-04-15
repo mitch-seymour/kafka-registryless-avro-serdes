@@ -13,13 +13,33 @@ dependencies {
 ```
 
 # Usage
-Once you've generated your classes from an Avro schema file, for example, with the [gradle-avro-plugin][gradle-avro-plugin], you can use the `AvroSerdes#get` method to generate an Avro. For example, if we have a generated class called `Tweet`, we could use the following code:
+Once you've generated your classes from an Avro schema file, for example, with the [gradle-avro-plugin][gradle-avro-plugin], you can use the `AvroSerdes#get` method to generate an Avro Serdes for a generated class. For example, if you generated a class named `Tweet` from the following definition:
+
+```json
+{
+    "namespace": "com.mitchseymour.model",
+    "name": "Tweet",
+    "type": "record",
+    "fields": [
+      {
+        "name": "id",
+        "type": "long"
+      },
+      {
+        "name": "text",
+        "type": "string"
+      }
+    ]
+ }
+```
+
+You could then create an Avro Serde for that class using this code:
 
 ```java
 Serde<Tweet> serde = AvroSerdes.get(Tweet.class);
 ```
 
-You can use then use this Serde anywhere you would normally use one Kafka's built-in Serdes. For example, in a Kafka Streams app, you could do this:
+The resulting Serde can be used anywhere you would normally use one of Kafka's built-in Serdes. For example, in a Kafka Streams app, you could do this:
 
 ```java
 stream.to("tweets", Produced.with(Serdes.String(), AvroSerdes.get(Tweet.class)));
