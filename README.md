@@ -1,7 +1,7 @@
 # Kafka Registryless Avro Serdes
 [![Maven Central](https://img.shields.io/maven-central/v/com.mitchseymour/kafka-registryless-avro-serdes.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22com.mitchseymour%22%20AND%20a:%22kafka-registryless-avro-serdes%22)
 
-If you want to use Avro in your Kafka project, but aren't using [Confluent Schema Registry][schema-registry], you can use this Avro Serdes instead. Unlike Confluent's Avro Serdes, the record schema will be serialized with each message.
+If you want to use Avro in your Kafka project, but aren't using [Confluent Schema Registry][schema-registry], you can use this Avro Serdes instead. Note that the record schema will be serialized with each message.
 
 [schema-registry]: https://docs.confluent.io/current/schema-registry
 
